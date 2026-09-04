@@ -1,0 +1,57 @@
+<ContentDialog
+    x:Class="LiquidVault.App.Dialogs.EntryEditorDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="资料"
+    PrimaryButtonText="加密保存"
+    CloseButtonText="取消"
+    DefaultButton="Primary">
+    <ScrollViewer MaxHeight="720" MinWidth="500" AllowDrop="True" DragOver="Attachment_DragOver" Drop="Attachment_Drop">
+        <StackPanel Spacing="12" Padding="0,6,0,0">
+            <TextBlock Text="资料类型" Opacity="0.72" />
+            <ComboBox x:Name="TypeBox" SelectedIndex="0" SelectionChanged="TypeBox_SelectionChanged">
+                <ComboBoxItem Content="密码" Tag="Password" />
+                <ComboBoxItem Content="私密笔记" Tag="Note" />
+                <ComboBoxItem Content="聊天记录" Tag="Chat" />
+                <ComboBoxItem Content="通用文本" Tag="Text" />
+                <ComboBoxItem Content="文件" Tag="File" />
+            </ComboBox>
+            <TextBox x:Name="TitleBox" Header="标题" MaxLength="120" />
+            <StackPanel x:Name="PasswordFields" Spacing="12">
+                <TextBox x:Name="UsernameBox" Header="账号 / 用户名" MaxLength="200" />
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <PasswordBox x:Name="PasswordValueBox" Header="密码" MaxLength="400" PasswordRevealMode="Peek" />
+                    <Button Grid.Column="1" VerticalAlignment="Bottom" Content="生成 24 位" Click="GeneratePassword_Click" />
+                </Grid>
+                <TextBox x:Name="UrlBox" Header="网址（仅 http/https）" MaxLength="300" />
+            </StackPanel>
+            <StackPanel x:Name="TextFields" Spacing="12" Visibility="Collapsed">
+                <TextBox x:Name="PeopleBox" Header="参与者 / 来源" MaxLength="300" />
+                <TextBox x:Name="ContentBox" Header="正文" MaxLength="30000" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="180" />
+            </StackPanel>
+            <TextBox x:Name="NoteBox" Header="备注 / 标签" MaxLength="2000" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="80" />
+            <Border Padding="12" BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}" BorderThickness="1" CornerRadius="8" AllowDrop="True" DragOver="Attachment_DragOver" Drop="Attachment_Drop">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="附件（可添加多个）" FontWeight="SemiBold" />
+                    <TextBlock Text="点击选择，或把电脑文件拖到这里" Opacity="0.65" />
+                    <Button Content="选择文件" Click="ChooseAttachments_Click" HorizontalAlignment="Left" />
+                    <ListView x:Name="AttachmentList" MaxHeight="150">
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding DisplayText}" TextTrimming="CharacterEllipsis" />
+                                    <Button Grid.Column="1" Content="查看" Click="PreviewAttachment_Click" Tag="{Binding}" />
+                                    <Button Grid.Column="2" Content="导出" Click="ExportAttachment_Click" Tag="{Binding}" />
+                                    <Button Grid.Column="3" Content="移除" Click="RemoveAttachment_Click" Tag="{Binding}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </StackPanel>
+            </Border>
+            <InfoBar x:Name="ValidationBar" IsOpen="False" Severity="Error" IsClosable="False" />
+        </StackPanel>
+    </ScrollViewer>
+</ContentDialog>

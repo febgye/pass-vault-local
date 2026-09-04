@@ -1,0 +1,30 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquidVault.Core", "src\LiquidVault.Core\LiquidVault.Core.csproj", "{8C79D947-0196-4C19-8FC5-54E55CC859C0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquidVault.App", "src\LiquidVault.App\LiquidVault.App.csproj", "{7E71DF4B-6465-411E-B037-5D1818DCEED2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiquidVault.SelfTest", "tests\LiquidVault.SelfTest\LiquidVault.SelfTest.csproj", "{1804A7CF-51FC-42ED-9539-4B0095D0D4D4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8C79D947-0196-4C19-8FC5-54E55CC859C0}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8C79D947-0196-4C19-8FC5-54E55CC859C0}.Debug|x64.Build.0 = Debug|Any CPU
+		{8C79D947-0196-4C19-8FC5-54E55CC859C0}.Release|x64.ActiveCfg = Release|Any CPU
+		{8C79D947-0196-4C19-8FC5-54E55CC859C0}.Release|x64.Build.0 = Release|Any CPU
+		{7E71DF4B-6465-411E-B037-5D1818DCEED2}.Debug|x64.ActiveCfg = Debug|x64
+		{7E71DF4B-6465-411E-B037-5D1818DCEED2}.Debug|x64.Build.0 = Debug|x64
+		{7E71DF4B-6465-411E-B037-5D1818DCEED2}.Release|x64.ActiveCfg = Release|x64
+		{7E71DF4B-6465-411E-B037-5D1818DCEED2}.Release|x64.Build.0 = Release|x64
+		{1804A7CF-51FC-42ED-9539-4B0095D0D4D4}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1804A7CF-51FC-42ED-9539-4B0095D0D4D4}.Debug|x64.Build.0 = Debug|Any CPU
+		{1804A7CF-51FC-42ED-9539-4B0095D0D4D4}.Release|x64.ActiveCfg = Release|Any CPU
+		{1804A7CF-51FC-42ED-9539-4B0095D0D4D4}.Release|x64.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

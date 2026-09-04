@@ -1,0 +1,147 @@
+<Window
+    x:Class="LiquidVault.App.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:LiquidVault.App">
+    <Grid x:Name="RootGrid" Background="{StaticResource VaultBackgroundBrush}" KeyDown="RootGrid_KeyDown" PointerMoved="RootGrid_PointerMoved" AllowDrop="True" DragOver="RootGrid_DragOver" Drop="RootGrid_Drop">
+        <Border IsHitTestVisible="False">
+            <Border.Background>
+                <RadialGradientBrush Center="0.12,0.10" GradientOrigin="0.12,0.10" RadiusX="0.72" RadiusY="0.86">
+                    <GradientStop Color="#367DD3FC" Offset="0" />
+                    <GradientStop Color="#007DD3FC" Offset="1" />
+                </RadialGradientBrush>
+            </Border.Background>
+        </Border>
+
+        <Border IsHitTestVisible="False">
+            <Border.Background>
+                <RadialGradientBrush Center="0.88,0.20" GradientOrigin="0.88,0.20" RadiusX="0.66" RadiusY="0.82">
+                    <GradientStop Color="#2EA78BFA" Offset="0" />
+                    <GradientStop Color="#00A78BFA" Offset="1" />
+                </RadialGradientBrush>
+            </Border.Background>
+        </Border>
+
+        <Border IsHitTestVisible="False">
+            <Border.Background>
+                <RadialGradientBrush Center="0.50,1.02" GradientOrigin="0.50,1.02" RadiusX="0.76" RadiusY="0.70">
+                    <GradientStop Color="#242DD4BF" Offset="0" />
+                    <GradientStop Color="#002DD4BF" Offset="1" />
+                </RadialGradientBrush>
+            </Border.Background>
+        </Border>
+        <Grid x:Name="SetupView" Visibility="Collapsed">
+            <Border Width="560" Padding="34" Background="{StaticResource VaultCardBrush}" BorderBrush="{StaticResource VaultLineBrush}" BorderThickness="1" CornerRadius="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel Spacing="14">
+                    <TextBlock Text="◆  液态保险库" FontSize="30" FontWeight="SemiBold" />
+                    <TextBlock Text="创建真正独立的 Windows 原生加密保险库" Opacity="0.68" />
+                    <TextBox x:Name="VaultPathBox" Header="保险库文件位置" IsReadOnly="True" />
+                    <Button Content="选择保存位置" Click="ChooseVaultPath_Click" HorizontalAlignment="Left" />
+                    <PasswordBox x:Name="SetupPasswordBox" Header="设置主密码（至少 16 位）" PasswordRevealMode="Peek" MaxLength="256" />
+                    <PasswordBox x:Name="SetupPasswordConfirmBox" Header="确认主密码" MaxLength="256" />
+                    <CheckBox x:Name="Argon2CheckBox" Content="使用 Argon2id 强化主密码（推荐）" IsChecked="True" />
+                    <Button Content="创建原生保险库" Style="{StaticResource AccentButtonStyle}" Click="CreateVault_Click" />
+                    <Button Content="从旧版 v5 加密备份迁移" Click="MigrateV5_Click" />
+                    <ProgressRing x:Name="SetupProgress" IsActive="False" HorizontalAlignment="Center" />
+                    <InfoBar x:Name="SetupInfo" IsOpen="False" IsClosable="False" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Grid x:Name="UnlockView" Visibility="Collapsed">
+            <Border Width="460" Padding="34" Background="{StaticResource VaultCardBrush}" BorderBrush="{StaticResource VaultLineBrush}" BorderThickness="1" CornerRadius="24" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel Spacing="14">
+                    <TextBlock Text="◆  液态保险库" FontSize="30" FontWeight="SemiBold" />
+                    <TextBlock x:Name="UnlockPathText" TextWrapping="Wrap" Opacity="0.58" />
+                    <PasswordBox x:Name="UnlockPasswordBox" Header="主密码" PasswordRevealMode="Peek" MaxLength="256" KeyDown="UnlockPasswordBox_KeyDown" />
+                    <Button x:Name="UnlockButton" Content="解锁" Style="{StaticResource AccentButtonStyle}" Click="Unlock_Click" />
+                    <Button Content="打开其他保险库" Click="OpenOtherVault_Click" />
+                    <ProgressRing x:Name="UnlockProgress" IsActive="False" HorizontalAlignment="Center" />
+                    <InfoBar x:Name="UnlockInfo" IsOpen="False" IsClosable="False" Severity="Error" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <Grid x:Name="VaultView" Visibility="Collapsed" RowSpacing="12" Padding="18">
+            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+            <Border Padding="16" Background="{StaticResource VaultCardBrush}" BorderBrush="{StaticResource VaultLineBrush}" BorderThickness="1" CornerRadius="16">
+                <Grid ColumnSpacing="10">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="液态保险库" FontSize="24" FontWeight="SemiBold" />
+                        <TextBlock x:Name="VaultStatusText" Opacity="0.58" />
+                    </StackPanel>
+                    <CommandBar Grid.Column="1" Background="Transparent" DefaultLabelPosition="Right">
+                        <AppBarButton Icon="Add" Label="新增" Click="AddEntry_Click" />
+                        <AppBarButton Icon="Attach" Label="添加文件" Click="AddFile_Click" />
+                        <AppBarButton Icon="Save" Label="备份" Click="ExportBackup_Click" />
+                        <AppBarButton Icon="Edit" Label="修改主密码" Click="ChangePassword_Click" />
+                        <AppBarButton Icon="Setting" Label="安全设置" Click="SecuritySettings_Click" />
+                        <AppBarButton Icon="Delete" Label="销毁" Click="DestroyVault_Click" />
+                        <AppBarButton Label="锁定" Click="Lock_Click">
+                            <AppBarButton.Icon>
+                                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE72E;" />
+                            </AppBarButton.Icon>
+                        </AppBarButton>
+                    </CommandBar>
+                </Grid>
+            </Border>
+            <Grid Grid.Row="1" ColumnSpacing="12">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="230" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <Border Background="{StaticResource VaultCardBrush}" BorderBrush="{StaticResource VaultLineBrush}" BorderThickness="1" CornerRadius="16" Padding="12">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="分类" Margin="8" FontWeight="SemiBold" />
+                        <ListView x:Name="CategoryList" SelectionChanged="CategoryList_SelectionChanged" SelectedIndex="0">
+                            <ListViewItem Content="全部资料" Tag="All" />
+                            <ListViewItem Content="密码" Tag="Password" />
+                            <ListViewItem Content="私密笔记" Tag="Note" />
+                            <ListViewItem Content="聊天记录" Tag="Chat" />
+                            <ListViewItem Content="通用文本" Tag="Text" />
+                            <ListViewItem Content="文件" Tag="File" />
+                            <ListViewItem Content="最近 7 天" Tag="Recent" />
+                        </ListView>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Background="{StaticResource VaultCardBrush}" BorderBrush="{StaticResource VaultLineBrush}" BorderThickness="1" CornerRadius="16" Padding="16">
+                    <Grid RowSpacing="10">
+                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                        <Grid ColumnSpacing="10">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="160" /></Grid.ColumnDefinitions>
+                            <TextBox x:Name="SearchBox" PlaceholderText="搜索标题、标签、账号和参与者" TextChanged="SearchBox_TextChanged" />
+                            <CheckBox Grid.Column="1" x:Name="DeepSearchCheckBox" Content="临时解密并搜索正文" Checked="DeepSearchCheckBox_Changed" Unchecked="DeepSearchCheckBox_Changed" />
+                            <ComboBox Grid.Column="2" x:Name="SortBox" SelectedIndex="0" SelectionChanged="SortBox_SelectionChanged">
+                                <ComboBoxItem Content="最近更新" Tag="Updated" />
+                                <ComboBoxItem Content="最近创建" Tag="Created" />
+                                <ComboBoxItem Content="标题 A-Z" Tag="Title" />
+                                <ComboBoxItem Content="密码强度" Tag="Strength" />
+                            </ComboBox>
+                        </Grid>
+                        <ListView Grid.Row="1" x:Name="EntryList" SelectionMode="Single" IsItemClickEnabled="True" ItemClick="EntryList_ItemClick">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="local:EntryListRow">
+                                    <Border Padding="12" Margin="0,3" Background="#14FFFFFF" CornerRadius="12">
+                                        <Grid ColumnSpacing="10">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="{x:Bind Title}" FontSize="16" FontWeight="SemiBold" />
+                                                <TextBlock Text="{x:Bind Subtitle}" Opacity="0.60" TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                <Button Content="复制密码" Visibility="{x:Bind PasswordActionsVisibility}" Click="CopyPassword_Click" Tag="{x:Bind Id}" />
+                                                <Button Content="显示" Visibility="{x:Bind PasswordActionsVisibility}" Click="RevealPassword_Click" Tag="{x:Bind Id}" />
+                                                <Button Content="查看" Visibility="{x:Bind FileActionsVisibility}" Click="PreviewFile_Click" Tag="{x:Bind Id}" />
+                                                <Button Content="编辑" Click="EditEntry_Click" Tag="{x:Bind Id}" />
+                                                <Button Content="删除" Click="DeleteEntry_Click" Tag="{x:Bind Id}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+                </Border>
+            </Grid>
+            <InfoBar Grid.Row="2" x:Name="StatusInfo" IsOpen="False" IsClosable="True" />
+        </Grid>
+    </Grid>
+</Window>
