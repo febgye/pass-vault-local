@@ -10,6 +10,8 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 
+using System.Runtime.InteropServices;
+
 namespace LiquidVault.App.Dialogs;
 
 public sealed partial class EntryEditorDialog : ContentDialog
@@ -158,7 +160,11 @@ public sealed partial class EntryEditorDialog : ContentDialog
 
     private void RemoveAttachment_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button { Tag: AttachmentRow row }) _attachments.Remove(row);
+        if (sender is Button { Tag: AttachmentRow row } && _attachments.Remove(row))
+        {
+            if (!string.IsNullOrWhiteSpace(row.Attachment.OriginalPath))
+                _newSourcePaths.Remove(row.Attachment.OriginalPath);
+        }
     }
 
     private async void ExportAttachment_Click(object sender, RoutedEventArgs e)
@@ -174,31 +180,45 @@ public sealed partial class EntryEditorDialog : ContentDialog
     private async void PreviewAttachment_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: AttachmentRow row }) return;
-        if (!AttachmentPreviewService.IsPreviewable(row.Attachment.FileName))
+        try
         {
-            await new ContentDialog { XamlRoot = XamlRoot, Title = "暂不支持预览", Content = "此文件类型不能在密码库内直接查看，请使用导出。", CloseButtonText = "关闭" }.ShowAsync();
-            return;
+            PreviewPanel.Visibility = Visibility.Collapsed;
+            PreviewScrollViewer.Content = null;
+            PreviewTitle.Text = row.Attachment.FileName;
+            PreviewStatus.Text = "正在加载预览…";
+            PreviewPanel.Visibility = Visibility.Visible;
+            if (!AttachmentPreviewService.IsPreviewable(row.Attachment.FileName))
+            {
+                PreviewStatus.Text = "此文件类型不能在密码库内直接查看，请使用导出。";
+                return;
+            }
+            if (AttachmentPreviewService.IsTextPreview(row.Attachment.FileName))
+            {
+                var text = new TextBlock { Text = AttachmentPreviewService.DecodeText(row.Attachment.FileName, row.Attachment.Content), TextWrapping = TextWrapping.NoWrap, FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Consolas"), MinWidth = 650 };
+                PreviewScrollViewer.Content = text;
+                PreviewStatus.Text = "文本预览";
+                return;
+            }
+            var image = new Image { Stretch = Microsoft.UI.Xaml.Media.Stretch.Uniform, MaxWidth = 760, MaxHeight = 560 };
+            using var stream = new MemoryStream(row.Attachment.Content, writable: false);
+            var bitmap = new BitmapImage { DecodePixelWidth = 2048, DecodePixelHeight = 2048 };
+            await bitmap.SetSourceAsync(stream.AsRandomAccessStream());
+            image.Source = bitmap;
+            PreviewScrollViewer.Content = image;
+            PreviewStatus.Text = "图片预览";
         }
-        if (AttachmentPreviewService.IsTextPreview(row.Attachment.FileName))
+        catch (Exception ex) when (ex is VaultException or IOException or InvalidOperationException or ArgumentException or OutOfMemoryException or COMException)
         {
-            try
-            {
-                var box = new TextBox { Text = AttachmentPreviewService.DecodeText(row.Attachment.FileName, row.Attachment.Content), IsReadOnly = true, AcceptsReturn = true, TextWrapping = TextWrapping.NoWrap, FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Consolas"), MinWidth = 650, MinHeight = 420 };
-                await new ContentDialog { XamlRoot = XamlRoot, Title = row.Attachment.FileName, Content = new ScrollViewer { Content = box, MaxHeight = 600 }, CloseButtonText = "关闭" }.ShowAsync();
-            }
-            catch (InvalidOperationException ex)
-            {
-                await new ContentDialog { XamlRoot = XamlRoot, Title = "无法查看", Content = ex.Message, CloseButtonText = "关闭" }.ShowAsync();
-            }
-            return;
+            PreviewStatus.Text = $"无法查看：{ex.Message}";
         }
-        var image = new Image { Stretch = Microsoft.UI.Xaml.Media.Stretch.Uniform, MaxWidth = 760, MaxHeight = 560 };
-        using var stream = new MemoryStream(row.Attachment.Content, writable: false);
-        var bitmap = new BitmapImage();
-        await bitmap.SetSourceAsync(stream.AsRandomAccessStream());
-        image.Source = bitmap;
-        await new ContentDialog { XamlRoot = XamlRoot, Title = row.Attachment.FileName, Content = image, CloseButtonText = "关闭" }.ShowAsync();
-        image.Source = null;
+    }
+
+    private void ClosePreview_Click(object sender, RoutedEventArgs e)
+    {
+        PreviewScrollViewer.Content = null;
+        PreviewTitle.Text = string.Empty;
+        PreviewStatus.Text = string.Empty;
+        PreviewPanel.Visibility = Visibility.Collapsed;
     }
 
     private void ClearFields()

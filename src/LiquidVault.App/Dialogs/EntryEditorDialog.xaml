@@ -51,6 +51,16 @@
                     </ListView>
                 </StackPanel>
             </Border>
+            <Border x:Name="PreviewPanel" Visibility="Collapsed" Padding="8" BorderThickness="1" CornerRadius="8">
+                <StackPanel Spacing="8">
+                    <Grid>
+                        <TextBlock x:Name="PreviewTitle" FontWeight="SemiBold" />
+                        <Button Content="关闭预览" Click="ClosePreview_Click" HorizontalAlignment="Right" />
+                    </Grid>
+                    <TextBlock x:Name="PreviewStatus" Opacity="0.7" />
+                    <ScrollViewer x:Name="PreviewScrollViewer" MaxHeight="420" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" />
+                </StackPanel>
+            </Border>
             <InfoBar x:Name="ValidationBar" IsOpen="False" Severity="Error" IsClosable="False" />
         </StackPanel>
     </ScrollViewer>

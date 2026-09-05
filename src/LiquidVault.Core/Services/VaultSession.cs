@@ -174,8 +174,13 @@ public sealed class VaultSession : IDisposable
     public async Task RemoveAttachmentAsync(Guid entryId, Guid attachmentId, CancellationToken cancellationToken = default)
     {
         EnsureOpen();
-            var entry = OpenEntry(entryId);
+        var entry = OpenEntry(entryId);
         var restoredPaths = new List<string>();
+        var index = Container.Entries.FindIndex(x => x.Id == entryId);
+        if (index < 0) throw new VaultFormatException("未找到要修改的条目。");
+        var previousRecord = Container.Entries[index];
+        var previousRevision = Container.Revision;
+        var previousUpdatedAt = Container.UpdatedAt;
         try
         {
             var removed = entry.Attachments.FirstOrDefault(x => x.Id == attachmentId) ?? throw new VaultFormatException("未找到附件。");
@@ -185,7 +190,15 @@ public sealed class VaultSession : IDisposable
             {
                 Container.Entries.RemoveAll(x => x.Id == entryId);
                 Touch();
-                await SaveAsync(cancellationToken).ConfigureAwait(false);
+                try { await SaveAsync(cancellationToken).ConfigureAwait(false); }
+                catch
+                {
+                    Container.Entries.Insert(index, previousRecord);
+                    Container.Revision = previousRevision;
+                    Container.UpdatedAt = previousUpdatedAt;
+                    DeleteRestoredFiles(restoredPaths);
+                    throw;
+                }
                 return;
             }
             try { await UpsertAsync(entry, cancellationToken).ConfigureAwait(false); }
@@ -206,9 +219,22 @@ public sealed class VaultSession : IDisposable
             if (string.IsNullOrWhiteSpace(attachment.OriginalPath)) throw new VaultFormatException("文件缺少原始位置，无法安全恢复。");
             return System.IO.Path.GetFullPath(attachment.OriginalPath);
         }).ToList();
-        if (destinations.Count != destinations.Distinct(StringComparer.OrdinalIgnoreCase).Count()) throw new VaultFormatException("多个附件的原始位置重复，无法安全恢复。");
-        foreach (var destination in destinations)
-            if (File.Exists(destination)) throw new IOException($"原位置已有同名文件：{destination}");
+        var reserved = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        for (var index = 0; index < destinations.Count; index++)
+        {
+            var destination = destinations[index];
+            if (File.Exists(destination) || !reserved.Add(destination))
+            {
+                var directory = System.IO.Path.GetDirectoryName(destination)!;
+                var name = System.IO.Path.GetFileNameWithoutExtension(destination);
+                var extension = System.IO.Path.GetExtension(destination);
+                var suffix = 1;
+                string candidate;
+                do candidate = System.IO.Path.Combine(directory, $"{name} ({suffix++}){extension}");
+                while (File.Exists(candidate) || !reserved.Add(candidate));
+                destinations[index] = candidate;
+            }
+        }
         var temporary = new List<string>(items.Count);
         var moved = new List<string>(items.Count);
         try

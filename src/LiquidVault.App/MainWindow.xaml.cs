@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Runtime.InteropServices;
 using LiquidVault.App.Dialogs;
 using LiquidVault.App.Services;
 using LiquidVault.Core.Migration;
@@ -250,18 +251,25 @@ public sealed partial class MainWindow : Window
         }
         if (AttachmentPreviewService.IsTextPreview(attachment.FileName))
         {
-            var box = new TextBox { Text = AttachmentPreviewService.DecodeText(attachment.FileName, attachment.Content), IsReadOnly = true, AcceptsReturn = true, TextWrapping = TextWrapping.NoWrap, FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Consolas"), MinWidth = 650, MinHeight = 420 };
-            await new ContentDialog { XamlRoot = RootGrid.XamlRoot, Title = attachment.FileName, Content = new ScrollViewer { Content = box, MaxHeight = 600 }, CloseButtonText = "关闭" }.ShowAsync();
-            box.Text = string.Empty;
+            var text = new TextBlock { Text = AttachmentPreviewService.DecodeText(attachment.FileName, attachment.Content), TextWrapping = TextWrapping.NoWrap, FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Consolas"), MinWidth = 650 };
+            await new ContentDialog { XamlRoot = RootGrid.XamlRoot, Title = attachment.FileName, Content = new ScrollViewer { Content = text, Width = 650, Height = 420, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Auto }, CloseButtonText = "关闭" }.ShowAsync();
+            text.Text = string.Empty;
             return;
         }
         var image = new Image { Stretch = Microsoft.UI.Xaml.Media.Stretch.Uniform, MaxWidth = 760, MaxHeight = 560 };
         using var stream = new MemoryStream(attachment.Content, writable: false);
-        var bitmap = new BitmapImage { DecodePixelWidth = 4096, DecodePixelHeight = 4096 };
-        await bitmap.SetSourceAsync(stream.AsRandomAccessStream());
-        image.Source = bitmap;
-        await new ContentDialog { XamlRoot = RootGrid.XamlRoot, Title = attachment.FileName, Content = image, CloseButtonText = "关闭" }.ShowAsync();
-        image.Source = null;
+        try
+        {
+            var bitmap = new BitmapImage { DecodePixelWidth = 2048, DecodePixelHeight = 2048 };
+            await bitmap.SetSourceAsync(stream.AsRandomAccessStream());
+            image.Source = bitmap;
+            await new ContentDialog { XamlRoot = RootGrid.XamlRoot, Title = attachment.FileName, Content = image, CloseButtonText = "关闭" }.ShowAsync();
+            image.Source = null;
+        }
+        catch (Exception ex) when (ex is IOException or InvalidOperationException or ArgumentException or OutOfMemoryException or COMException)
+        {
+            await new ContentDialog { XamlRoot = RootGrid.XamlRoot, Title = "无法查看", Content = "图片无法解码或占用内存过大，请导出后使用其他程序查看。", CloseButtonText = "关闭" }.ShowAsync();
+        }
     }
 
     private async void AddFile_Click(object sender, RoutedEventArgs e)

@@ -29,6 +29,7 @@ internal static class Program
             await DeleteFileEntryRestoresOriginalAsync(root);
             await RemovingAttachmentRestoresOriginalAsync(root);
             PreviewEligibility();
+            PreviewPreservesMultilineText();
             PathValidation();
             await V5MigrationAsync(root);
             PasswordGeneration();
@@ -44,6 +45,14 @@ internal static class Program
         {
             try { Directory.Delete(root, true); } catch (IOException) { }
         }
+    }
+
+    private static void PreviewPreservesMultilineText()
+    {
+        var text = "第一行\r\n第二行\n第三行";
+        var decoded = AttachmentPreviewService.DecodeText("多行.txt", Encoding.UTF8.GetBytes(text));
+        Equal(text, decoded, "multiline text preview preserves all lines");
+        _passed++;
     }
 
     private static async Task RoundTripAndAtomicBackupAsync(string root)
